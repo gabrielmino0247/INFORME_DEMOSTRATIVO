@@ -15,7 +15,7 @@ st.set_page_config(page_title="Informe por Jefe", layout="wide")
 
 
 
-locale.setlocale(locale.LC_TIME, "es_PY.UTF-8")
+# locale.setlocale(locale.LC_TIME, "es_PY.UTF-8")
  # Para sistemas Linux/mac
 # En Windows puede ser "Spanish_Paraguay" o "es_PY" si falla, probamos más abajo
 

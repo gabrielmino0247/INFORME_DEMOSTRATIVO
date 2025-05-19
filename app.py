@@ -21,7 +21,12 @@ st.set_page_config(page_title="Informe por Jefe", layout="wide")
 
 
 
-url = "https://onedrive.live.com/personal/4ee4a6d408e38949/_layouts/15/Doc.download?sourcedoc=%7Bf2be71d5-e7ce-4cf1-97e2-fa1aec36b910%7D&action=default&redeem=aHR0cHM6Ly8xZHJ2Lm1zL3gvYy80ZWU0YTZkNDA4ZTM4OTQ5L0VkVnh2dkxPNV9GTWwtTDZHdXcydVJBQjM1Zzd3dHZuclV2a2FsTTZmNTltdVE_ZT12eTYzTEU&slrid=dbc69fa1-10b6-8000-f9aa-23b6d01dfcda&originalPath=aHR0cHM6Ly8xZHJ2Lm1zL3gvYy80ZWU0YTZkNDA4ZTM4OTQ5L0VkVnh2dkxPNV9GTWwtTDZHdXcydVJBQjM1Zzd3dHZuclV2a2FsTTZmNTltdVE_cnRpbWU9cURNT2doU1gzVWc&CID=76b65d10-0079-4365-a4b6-5681317e565e&_SRM=0:G:37"
+# url = "https://docs.google.com/spreadsheets/d/1sueaCR4IPwVnVBoHkl5w4T1eEd9xLH6I/edit?usp=sharing"
+
+# sheet_id = "1sueaCR4IPwVnVBoHkl5w4T1eEd9xLH6I"
+# url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+
+
 # 🔐 Login básico (manual)
 # =========================
 
@@ -95,7 +100,9 @@ st.title("📊 Informe Comercial por Jefe de Área")
 # Cargar los datos
 @st.cache_data
 def cargar_datos():
-    df = pd.read_excel(url, engine="openpyxl")
+    sheet_id = "1sueaCR4IPwVnVBoHkl5w4T1eEd9xLH6I"
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+    df = pd.read_csv(url)
     return df
 
 df = cargar_datos()

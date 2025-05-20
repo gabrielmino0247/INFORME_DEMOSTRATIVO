@@ -153,7 +153,7 @@ usuario = st.session_state.usuario
 if usuario == "admin":
     datos_filtrados = df_rango.copy()
 else:
-    datos_filtrados = df_rango[df_rango["JEFE_AREA"] == usuario]
+    datos_filtrados = df_rango[df_rango["JEFE_AREA"] == usuario.upper()]
 
 st.markdown(f"👤 Usuario logueado: `{usuario}`")
 st.markdown(f"🔎 Filas visibles: {len(datos_filtrados)}")

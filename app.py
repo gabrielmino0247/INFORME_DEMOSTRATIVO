@@ -700,9 +700,11 @@ df_disp["MARGEN_%"] = (df_disp["UTILIDAD"] / df_disp[col_venta].replace(0, pd.NA
 
 # Filtro opcional: eliminar casos sin ventas
 df_disp = df_disp[df_disp[col_venta] > 0]
-# Limitar a las 50 marcas con más ventas
-df_disp = df_disp.sort_values(col_venta, ascending=False).head(50)
-
+# Ordenar y limitar visualización
+df_disp = df_disp.sort_values(col_venta, ascending=False)
+# 🏷️ Mostrar solo etiquetas de las 15 marcas más importantes
+top_etiquetas = df_disp.head(15)[agrupador].tolist()
+df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiquetas), "")
 
 # Crear gráfico
 fig_disp = px.scatter(
@@ -710,15 +712,23 @@ fig_disp = px.scatter(
     x="UTILIDAD",
     y="MARGEN_%",
     size=col_venta,
-    text=agrupador,
     color=col_venta,
+    text="ETIQUETA",
+    hover_name=agrupador,
     labels={"UTILIDAD": "Utilidad (₲)", "MARGEN_%": "Margen (%)"},
     title=f"📍 Margen vs Utilidad por {dimension_seleccionada} – {mes_analizado}",
-    hover_name=agrupador,
-    size_max=40
+    size_max=40,
+    color_continuous_scale="Blues",
+    opacity=0.7
 )
 
-fig_disp.update_traces(textposition='top center')
+# Estética y etiquetas
+fig_disp.update_traces(
+    textposition="top center",
+    textfont=dict(size=10, color="white"),
+    selector=dict(mode="markers+text")
+)
+
 fig_disp.update_layout(
     xaxis_tickprefix="₲ ",
     xaxis_tickformat=",",

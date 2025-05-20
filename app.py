@@ -466,15 +466,15 @@ if usuario == "admin":
     datos_mes_aa = df[df["FECHA"].dt.to_period("M") == (mes_analizado - 12)].copy()
 else:
     datos_mes_actual = df[
-        (df["JEFE_AREA"] == usuario) &
+        (df["JEFE_AREA"] == usuario.upper()) &
         (df["FECHA"].dt.to_period("M") == mes_analizado)
     ].copy()
     datos_mes_anterior = df[
-        (df["JEFE_AREA"] == usuario) &
+        (df["JEFE_AREA"] == usuario.upper()) &
         (df["FECHA"].dt.to_period("M") == (mes_analizado - 1))
     ].copy()
     datos_mes_aa = df[
-        (df["JEFE_AREA"] == usuario) &
+        (df["JEFE_AREA"] == usuario.upper()) &
         (df["FECHA"].dt.to_period("M") == (mes_analizado - 12))
     ].copy()
 

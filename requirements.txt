@@ -2,7 +2,7 @@ streamlit
 pandas
 openpyxl
 numpy
-plotly.express
-openpyxl
 plotly
 xlsxwriter
+requests
+

@@ -102,7 +102,7 @@ st.title("📊 Informe Comercial por Jefe de Área")
 # Cargar los datos
 @st.cache_data
 def cargar_datos_desde_dropbox():
-    url = "https://www.dropbox.com/scl/fi/y9hfcpgewwwp86u6qsb2y/demostrativo.xlsx?rlkey=8bwbouffb99ovukqnwu45qura&st=lzjjoinl&dl=1"
+    url = st.secrets["urls"]["dropbox"]
     response = requests.get(url)
     
     if response.status_code != 200:

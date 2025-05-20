@@ -1,0 +1,23 @@
+# 🚫 Secretos y configuraciones sensibles
+.streamlit/secrets.toml
+
+# 🚫 Archivos temporales o de cache
+__pycache__/
+*.pyc
+*.pyo
+
+# 🚫 Archivos de entorno virtual
+venv/
+.env/
+
+# 🚫 Archivos de logs o debug
+*.log
+
+# 🚫 Bases de datos locales
+*.db
+*.sqlite
+logins.db
+
+# 🚫 Datos de pruebas
+*.xlsx
+*.csv

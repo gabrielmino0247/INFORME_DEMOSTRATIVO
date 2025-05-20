@@ -10,6 +10,8 @@ import io
 import plotly.graph_objects as go
 import locale
 import datetime
+import requests
+import tempfile
 
 st.set_page_config(page_title="Informe por Jefe", layout="wide")
 
@@ -99,13 +101,23 @@ st.title("📊 Informe Comercial por Jefe de Área")
 
 # Cargar los datos
 @st.cache_data
-def cargar_datos():
-    sheet_id = "1sueaCR4IPwVnVBoHkl5w4T1eEd9xLH6I"
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-    df = pd.read_csv(url)
+def cargar_datos_desde_dropbox():
+    url = "https://www.dropbox.com/scl/fi/y9hfcpgewwwp86u6qsb2y/demostrativo.xlsx?rlkey=8bwbouffb99ovukqnwu45qura&st=lzjjoinl&dl=1"
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        st.error("❌ No se pudo descargar el archivo desde Dropbox")
+        st.stop()
+
+    # Guardar en archivo temporal
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".xlsx") as tmp:
+        tmp.write(response.content)
+        tmp_path = tmp.name
+
+    df = pd.read_excel(tmp_path, engine="openpyxl")
     return df
 
-df = cargar_datos()
+df = cargar_datos_desde_dropbox()
 
 with st.sidebar:
     st.markdown(f"👤 Usuario: `{st.session_state.usuario}`")

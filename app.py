@@ -701,8 +701,9 @@ df_disp["MARGEN_%"] = (df_disp["UTILIDAD"] / df_disp[col_venta].replace(0, pd.NA
 # Filtro opcional: eliminar casos sin ventas
 df_disp = df_disp[df_disp[col_venta] > 0]
 # Ordenar y limitar visualización
-df_disp = df_disp.sort_values(col_venta, ascending=False)
+df_disp = df_disp.sort_values(col_venta, ascending=False).head(20)
 # 🏷️ Mostrar solo etiquetas de las 15 marcas más importantes
+#limitar a 15 los elementos
 top_etiquetas = df_disp.head(15)[agrupador].tolist()
 df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiquetas), "")
 

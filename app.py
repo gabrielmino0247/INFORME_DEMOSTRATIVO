@@ -162,7 +162,7 @@ else:
 
 st.markdown(f"👤 Usuario logueado: `{usuario}`")
 st.markdown(f"🔎 Filas visibles: {len(datos_filtrados)}")
-st.dataframe(datos_filtrados.head(), use_container_width=True)
+# st.dataframe(datos_filtrados.head(), use_container_width=True)
 
 
 # Mostrar tabla filtrada

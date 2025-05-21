@@ -719,9 +719,7 @@ fig_disp.update_layout(
 st.plotly_chart(fig_disp, use_container_width=True)
 
 
-
-
-
+# Comparativo anual de ventas por local
 st.subheader("📊 Comparación Anual de Ventas por Local")
 
 # Agrupación por LOCAL

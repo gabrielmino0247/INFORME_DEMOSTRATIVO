@@ -69,6 +69,8 @@ def generar_excel(df, nombre_hoja="Resumen"):
 # Función para formato paraguayo con símbolo ₲
 def formatear_guaranies(valor):
     try:
+        if pd.isna(valor):
+            return ""
         return f"₲ {valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
     except:
         return valor
@@ -83,7 +85,10 @@ def formatear_numero(valor):
         return ""
     
 def formatear_porcentaje(valor):
+    valor = valor * 100
     try:
+        if pd.isna(valor):
+            return ""
         return f"{valor:.2f}%".replace(".", ",")
     except:
         return valor
@@ -190,7 +195,7 @@ else:
     col1, col2, col3 = st.columns(3)
     col1.metric("💸 Total Ventas", formatear_guaranies(total_venta))
     col2.metric("📈 Total Utilidad", formatear_guaranies(total_utilidad))
-    col3.metric("📊 Margen Promedio", f"{formatear_numero(margen_promedio)} %")
+    col3.metric("📊 Margen Promedio", formatear_porcentaje(margen_promedio))
 
 
 # Gráfico de evolución mensual
@@ -292,7 +297,7 @@ if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA"
     )
 
     # Formatear como texto estilo regional
-    tabla_margen = tabla_margen.map(formatear_numero)
+    tabla_margen = tabla_margen.map(formatear_porcentaje)
 
     st.dataframe(tabla_margen, use_container_width=True)
     # Botón de descarga
@@ -1079,3 +1084,69 @@ st.download_button(
     file_name=f"sobre_stock_{mes_analizado}.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
+
+
+# Tabla de margen máximo por sector, subsector y marca
+st.subheader("📘 MARGEN maximo por Sector, Subsector y Marca")
+
+if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA", "LOCAL", "%:"]):
+    # Crear tabla pivot (sin formatear aún)
+    tabla_margen_cruda = pd.pivot_table(
+        datos_filtrados,
+        index=["SECTOR", "SUBSECTOR", "MARCA"],
+        columns="LOCAL",
+        values="%:",
+        aggfunc="mean"
+    )
+
+    # Calcular margen máximo entre locales (ignora NaN)
+    tabla_margen_cruda["Margen Máximo"] = tabla_margen_cruda.max(axis=1)
+
+    # Copiar y aplicar formato visual
+    tabla_margen = tabla_margen_cruda.copy()
+    tabla_margen = tabla_margen.map(formatear_porcentaje)
+
+    # Formatear también la nueva columna "Margen Máximo"
+    tabla_margen["Margen Máximo"] = tabla_margen_cruda["Margen Máximo"].map(formatear_porcentaje)
+
+    st.dataframe(tabla_margen, use_container_width=True)
+
+    # Exportar tabla original (sin formato)
+    excel_margen = generar_excel(tabla_margen_cruda, "Margen")
+    st.download_button(
+        label="⬇️ Descargar tabla de margen",
+        data=excel_margen,
+        file_name=f"tabla_margen_maximo_{usuario}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    st.warning("Faltan columnas para generar la tabla de margen.") # Faltan columnas
+
+
+
+
+st.subheader("📉 Subsectores con Margen menor a 10%")
+
+if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL", "%:"]):
+    # Agrupación por SECTOR, SUBSECTOR y LOCAL
+    tabla_subsector = datos_filtrados.groupby(["SECTOR", "SUBSECTOR", "LOCAL"])["%:"].mean().reset_index()
+
+    # Filtrar donde el margen promedio sea menor al 10%
+    tabla_filtrada = tabla_subsector[tabla_subsector["%:"] < 0.1].copy()
+
+    # Formatear margen
+    tabla_filtrada["%:"] = tabla_filtrada["%:"].map(formatear_porcentaje)
+
+    st.dataframe(tabla_filtrada, use_container_width=True)
+
+    # Descargar versión sin formato
+    excel_margen_bajo = generar_excel(tabla_subsector[tabla_subsector["%:"] < 0.1], "Subsectores < 10")
+    st.download_button(
+        label="⬇️ Descargar subsectores con margen < 10%",
+        data=excel_margen_bajo,
+        file_name=f"subsectores_margen_bajo_{usuario}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+else:
+    st.warning("Faltan columnas para generar esta tabla.")
+

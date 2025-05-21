@@ -101,6 +101,14 @@ def formatear_numeroint(valor):
     except:
         return valor
 
+def estilo_delta(valor):
+    flecha = "⬆️" if valor >= 0 else "⬇️"
+    color = "green" if valor >= 0 else "red"
+    return f":{color}[{flecha} {formatear_porcentaje(valor)}]"
+
+
+
+
 # Título
 st.title("📊 Informe Comercial por Jefe de Área")
 
@@ -242,46 +250,46 @@ else:
     st.warning("No se encontraron columnas 'LOCAL' y 'Valor de Vtas:' para graficar ventas por sucursal.")
 
 
-# Comparativo mensual: mes actual vs mes anterior vs mismo mes del año anterior
-if "FECHA" in datos_filtrados.columns and col_venta in datos_filtrados.columns:
-    df_cmp = datos_filtrados.copy()
-    df_cmp["AÑO"] = df_cmp["FECHA"].dt.year
-    df_cmp["MES"] = df_cmp["FECHA"].dt.month
-    df_cmp["MES_AÑO"] = df_cmp["FECHA"].dt.to_period("M").astype(str)
+# # Comparativo mensual: mes actual vs mes anterior vs mismo mes del año anterior
+# if "FECHA" in datos_filtrados.columns and col_venta in datos_filtrados.columns:
+#     df_cmp = datos_filtrados.copy()
+#     df_cmp["AÑO"] = df_cmp["FECHA"].dt.year
+#     df_cmp["MES"] = df_cmp["FECHA"].dt.month
+#     df_cmp["MES_AÑO"] = df_cmp["FECHA"].dt.to_period("M").astype(str)
 
-    # Sumar ventas por mes-año
-    ventas_mensuales = df_cmp.groupby(["AÑO", "MES", "MES_AÑO"])[col_venta].sum().reset_index()
+#     # Sumar ventas por mes-año
+#     ventas_mensuales = df_cmp.groupby(["AÑO", "MES", "MES_AÑO"])[col_venta].sum().reset_index()
 
-    # Reordenar por fecha real
-    ventas_mensuales["FECHA_ORDEN"] = pd.to_datetime(ventas_mensuales["MES_AÑO"])
-    ventas_mensuales = ventas_mensuales.sort_values("FECHA_ORDEN")
+#     # Reordenar por fecha real
+#     ventas_mensuales["FECHA_ORDEN"] = pd.to_datetime(ventas_mensuales["MES_AÑO"])
+#     ventas_mensuales = ventas_mensuales.sort_values("FECHA_ORDEN")
 
-    # Calcular desplazamientos
-    ventas_mensuales["Mes anterior"] = ventas_mensuales[col_venta].shift(1)
-    ventas_mensuales["Año anterior"] = ventas_mensuales[col_venta].shift(12)
+#     # Calcular desplazamientos
+#     ventas_mensuales["Mes anterior"] = ventas_mensuales[col_venta].shift(1)
+#     ventas_mensuales["Año anterior"] = ventas_mensuales[col_venta].shift(12)
 
-    # Renombrar columna original para claridad
-    ventas_mensuales.rename(columns={col_venta: "Mes actual"}, inplace=True)
+#     # Renombrar columna original para claridad
+#     ventas_mensuales.rename(columns={col_venta: "Mes actual"}, inplace=True)
 
-    # Derretir para gráfico múltiple
-    df_plot = ventas_mensuales[["MES_AÑO", "Mes actual", "Mes anterior", "Año anterior"]].melt(id_vars="MES_AÑO",
-                                                                                               var_name="Tipo",
-                                                                                               value_name="Ventas")
+#     # Derretir para gráfico múltiple
+#     df_plot = ventas_mensuales[["MES_AÑO", "Mes actual", "Mes anterior", "Año anterior"]].melt(id_vars="MES_AÑO",
+#                                                                                                var_name="Tipo",
+#                                                                                                value_name="Ventas")
 
-    # Crear gráfico
-    fig_cmp = px.line(df_plot, x="MES_AÑO", y="Ventas", color="Tipo", markers=True,
-                      title="📈 Comparativo Mensual de Ventas")
-    fig_cmp.update_layout(
-        xaxis_title="Mes",
-        yaxis_title="Ventas (₲)",
-        yaxis_tickprefix="₲ ",
-        yaxis_tickformat=",",
-        hovermode="x unified"
-    )
+#     # Crear gráfico
+#     fig_cmp = px.line(df_plot, x="MES_AÑO", y="Ventas", color="Tipo", markers=True,
+#                       title="📈 Comparativo Mensual de Ventas")
+#     fig_cmp.update_layout(
+#         xaxis_title="Mes",
+#         yaxis_title="Ventas (₲)",
+#         yaxis_tickprefix="₲ ",
+#         yaxis_tickformat=",",
+#         hovermode="x unified"
+#     )
 
-    st.plotly_chart(fig_cmp, use_container_width=True)
-else:
-    st.warning("No se puede mostrar el comparativo mensual. Verificá que existan las columnas necesarias.")
+#     st.plotly_chart(fig_cmp, use_container_width=True)
+# else:
+#     st.warning("No se puede mostrar el comparativo mensual. Verificá que existan las columnas necesarias.")
 
 
 
@@ -408,7 +416,7 @@ else:
     ].copy()
 
 
-st.subheader(f"📋 Resumen de KPIs Anuales – {mes_analizado}")
+st.subheader(f"📋 Resumen de KPIs  con var mensual y anual – {mes_analizado}")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -416,41 +424,67 @@ col_costo = "Costo de Vtas:"
 # Total ventas
 ventas_actual = datos_mes_actual[col_venta].sum()
 ventas_anio_ant = datos_mes_aa[col_venta].sum()
-delta_ventas = ((ventas_actual - ventas_anio_ant) / ventas_anio_ant) * 100 if ventas_anio_ant else 0
+ventas_mes_ant = datos_mes_anterior[col_venta].sum()
+delta_ventas = ((ventas_actual - ventas_anio_ant) / ventas_anio_ant)  if ventas_anio_ant else 0
 
 # Total utilidad
 util_actual = (datos_mes_actual[col_venta] - datos_mes_actual[col_costo]).sum()
 util_anio_ant = (datos_mes_aa[col_venta] - datos_mes_aa[col_costo]).sum()
-delta_util = ((util_actual - util_anio_ant) / util_anio_ant) * 100 if util_anio_ant else 0
+util_mes_ant = (datos_mes_anterior[col_venta] - datos_mes_anterior[col_costo]).sum()
+delta_util = ((util_actual - util_anio_ant) / util_anio_ant)  if util_anio_ant else 0
 
 # Margen promedio
 margen_actual = util_actual / ventas_actual if ventas_actual else 0
 margen_anio_ant = util_anio_ant / ventas_anio_ant if ventas_anio_ant else 0
+margen_mes_ant = util_mes_ant / ventas_mes_ant if ventas_mes_ant else 0
+
+# Lo mismo para utilidad y margen
 delta_margen = margen_actual - margen_anio_ant
+delta_ventas_ma = (ventas_actual - ventas_mes_ant) / ventas_mes_ant if ventas_mes_ant else 0
+delta_ventas_aa = (ventas_actual - ventas_anio_ant) / ventas_anio_ant if ventas_anio_ant else 0
+delta_util_ma = (util_actual - util_mes_ant) / util_mes_ant if util_mes_ant else 0
+delta_util_aa = (util_actual - util_anio_ant) / util_anio_ant if util_anio_ant else 0
+delta_margen_ma = margen_actual - margen_mes_ant
+delta_margen_aa = margen_actual - margen_anio_ant
 
 # Mostrar métricas
 col1, col2, col3 = st.columns(3)
 
+# 💰 Ventas Totales
 col1.metric(
-    label="💰 Ventas Totales",
+    label="💰 Ventas Totales (Mes)",
     value=formatear_guaranies(ventas_actual),
-    delta=formatear_porcentaje(delta_ventas)
+    delta=formatear_porcentaje(delta_ventas_ma)
+)
+col1.metric(
+    label="↪️ Año",
+    value="",
+    delta=formatear_porcentaje(delta_ventas_aa)
 )
 
+# 📈 Utilidad Total
 col2.metric(
-    label="📈 Utilidad Total",
+    label="📈 Utilidad Total (Mes)",
     value=formatear_guaranies(util_actual),
-    delta=formatear_porcentaje(delta_util)
+    delta=formatear_porcentaje(delta_util_ma)
+)
+col2.metric(
+    label="↪️ Año",
+    value="",
+    delta=formatear_porcentaje(delta_util_aa)
 )
 
+# 📊 Margen Promedio
 col3.metric(
-    label="📊 Margen Promedio",
+    label="📊 Margen Promedio (Mes)",
     value=formatear_porcentaje(margen_actual),
-    delta=formatear_porcentaje(delta_margen)
+    delta=formatear_porcentaje(delta_margen_ma)
 )
-
-
-
+col3.metric(
+    label="↪️ Año",
+    value="",
+    delta=formatear_porcentaje(delta_margen_aa)
+)
 
 
 
@@ -470,7 +504,7 @@ variacion = pd.merge(actual_grouped, anterior_grouped, on=grupo, how="outer").fi
 
 # Calcular variaciones
 variacion["variacion_%"] = ((variacion["ventas_mes_actual"] - variacion["ventas_mes_anterior"]) / 
-                            variacion["ventas_mes_anterior"].replace(0, pd.NA)) * 100
+                            variacion["ventas_mes_anterior"].replace(0, pd.NA)) 
 variacion["diferencia"] = variacion["ventas_mes_actual"] - variacion["ventas_mes_anterior"]
 
 #copiamos y mostramos la tabla mas lindo
@@ -512,7 +546,7 @@ comparativo_aa = pd.merge(actual_grouped, aa_grouped, on=grupo, how="outer").fil
 comparativo_aa["variacion_%"] = (
     (comparativo_aa["ventas_actual"] - comparativo_aa["ventas_anio_anterior"]) /
     comparativo_aa["ventas_anio_anterior"].replace(0, pd.NA)
-) * 100
+) 
 
 comparativo_aa["diferencia"] = comparativo_aa["ventas_actual"] - comparativo_aa["ventas_anio_anterior"]
 
@@ -604,35 +638,46 @@ opciones_agrupador = {
 dimension_seleccionada = st.selectbox("Agrupar por:", list(opciones_agrupador.keys()))
 agrupador = opciones_agrupador[dimension_seleccionada]
 
-# Limpieza solo si la columna existe y tiene valores válidos
+# Validación
 if agrupador not in datos_mes_actual.columns:
     st.warning(f"La columna {agrupador} no está disponible en los datos.")
     st.stop()
 
-# Eliminar nulos
+# Preparar datos
 datos_filtrados = datos_mes_actual[datos_mes_actual[agrupador].notna()].copy()
-
-# Convertir a string por seguridad (Plotly a veces falla con ints o mixtos)
 datos_filtrados[agrupador] = datos_filtrados[agrupador].astype(str)
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
 
-# Agrupación
+# Agrupar y calcular
 df_disp = datos_filtrados.groupby(agrupador).agg({
     col_venta: "sum",
     col_costo: "sum"
 }).reset_index()
 
 df_disp["UTILIDAD"] = df_disp[col_venta] - df_disp[col_costo]
-df_disp["MARGEN_%"] = (df_disp["UTILIDAD"] / df_disp[col_venta].replace(0, pd.NA)) * 100
+df_disp["MARGEN_%"] = (df_disp["UTILIDAD"] / df_disp[col_venta].replace(0, pd.NA))
 
-# Filtro opcional: eliminar casos sin ventas
+# Formateo
+df_disp["UTILIDAD_TXT"] = df_disp["UTILIDAD"].map(formatear_guaranies)
+df_disp["MARGEN_TXT"] = df_disp["MARGEN_%"].map(formatear_porcentaje)
+df_disp["VENTA_TXT"] = df_disp[col_venta].map(formatear_guaranies)
+
+# Selector de ordenamiento para el top N
+criterios_orden = {
+    "Ventas (₲)": "Valor de Vtas:",
+    "Utilidad (₲)": "UTILIDAD",
+    "Margen (%)": "MARGEN_%"
+}
+criterio_seleccionado = st.selectbox("🔽 Ordenar Top 20 por:", list(criterios_orden.keys()))
+columna_orden = criterios_orden[criterio_seleccionado]
+
+
+# Filtros visuales
 df_disp = df_disp[df_disp[col_venta] > 0]
-# Ordenar y limitar visualización
-df_disp = df_disp.sort_values(col_venta, ascending=False).head(20)
-# 🏷️ Mostrar solo etiquetas de las 15 marcas más importantes
-#limitar a 15 los elementos
+df_disp = df_disp.sort_values(columna_orden, ascending=False).head(20)
+
 top_etiquetas = df_disp.head(15)[agrupador].tolist()
 df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiquetas), "")
 
@@ -640,19 +685,23 @@ df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiqu
 fig_disp = px.scatter(
     df_disp,
     x="UTILIDAD",
-    y="MARGEN_%",
+    y="MARGEN_%",  # en %
     size=col_venta,
-    color=col_venta,
     text="ETIQUETA",
-    hover_name=agrupador,
-    labels={"UTILIDAD": "Utilidad (₲)", "MARGEN_%": "Margen (%)"},
-    title=f"📍 Margen vs Utilidad por {dimension_seleccionada} – {mes_analizado}",
+    color=col_venta,
     size_max=40,
-    color_continuous_scale="Blues",
-    opacity=0.7
+    hover_name=agrupador,
+    hover_data={
+        "UTILIDAD": False,
+        "MARGEN_%": False,
+        col_venta: False,
+        "UTILIDAD_TXT": True,
+        "MARGEN_TXT": True,
+        "VENTA_TXT": True,
+    },
+    labels={"UTILIDAD": "Utilidad", "MARGEN_%": "Margen %"}
 )
 
-# Estética y etiquetas
 fig_disp.update_traces(
     textposition="top center",
     textfont=dict(size=10, color="white"),
@@ -660,6 +709,7 @@ fig_disp.update_traces(
 )
 
 fig_disp.update_layout(
+    xaxis_type="log",
     xaxis_tickprefix="₲ ",
     xaxis_tickformat=",",
     yaxis_tickformat=".2f",
@@ -667,7 +717,6 @@ fig_disp.update_layout(
 )
 
 st.plotly_chart(fig_disp, use_container_width=True)
-
 
 
 

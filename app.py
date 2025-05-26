@@ -8,7 +8,6 @@ import numpy as np
 import plotly.express as px
 import io
 import plotly.graph_objects as go
-import locale
 import datetime
 import requests
 import tempfile
@@ -55,7 +54,7 @@ if not st.session_state.logueado:
         if login(usuario, password):
             st.rerun()
         else:
-            st.error("❌ Usuario o contraseña incorrectos")
+            st.error(" Usuario o contraseña incorrectos")
     st.stop()
 
 # Función para exportar DataFrame a Excel en memoria
@@ -97,6 +96,8 @@ def formatear_porcentaje(valor):
 
 def formatear_numeroint(valor):
     try:
+        if pd.isna(valor):
+            return ""
         return f"{valor:,.0f}".replace(",", "X").replace(".", ",").replace("X", ".")
     except:
         return valor
@@ -110,7 +111,7 @@ def estilo_delta(valor):
 
 
 # Título
-st.title("📊 Informe Comercial por Jefe de Área")
+st.title(" Informe Comercial por Jefe de Área")
 
 # Cargar los datos
 @st.cache_data
@@ -119,7 +120,7 @@ def cargar_datos_desde_dropbox():
     response = requests.get(url)
     
     if response.status_code != 200:
-        st.error("❌ No se pudo descargar el archivo desde Dropbox")
+        st.error(" No se pudo descargar el archivo desde Dropbox")
         st.stop()
 
     # Guardar en archivo temporal
@@ -141,14 +142,16 @@ with st.sidebar:
 
 
 if "FECHA" not in df.columns:
-    st.error("❌ El archivo no contiene la columna 'FECHA'.")
+    st.error(" El archivo no contiene la columna 'FECHA'.")
     st.stop()
 
 # Filtro por rango de fechas
-min_fecha = df["FECHA"].min()
+# min_fecha = df["FECHA"].min()  por ahora no vamos a usar el mínimo de fecha del archivo, sino un valor fijo hasta que eliminemos 2017
+# minimo fecha var ahora 2024-01-01
+min_fecha = pd.to_datetime("2024-01-01")
 max_fecha = df["FECHA"].max()
 
-st.markdown("### 📅 Filtro de fechas para la vista general")
+st.markdown("###  Filtro de fechas para la vista general")
 fecha_inicio, fecha_fin = st.date_input(
     "Seleccioná el rango de fechas para KPIs y tablas:",
     value=(min_fecha.date(), max_fecha.date()),
@@ -174,7 +177,7 @@ st.markdown(f"🔎 Filas visibles: {len(datos_filtrados)}")
 
 
 # Mostrar tabla filtrada
-st.subheader(f"📋 Datos del jefe: {usuario}")
+st.subheader(f" Datos del jefe: {usuario}")
 
 # Crear una copia solo para la tabla y formatear la fecha como texto
 tabla_para_mostrar = datos_filtrados.copy()
@@ -186,7 +189,7 @@ st.dataframe(tabla_para_mostrar, use_container_width=True)
  
 
 # KPIs
-st.subheader("📌 Indicadores Clave (KPIs)")
+st.subheader(" Indicadores Clave (KPIs)")
 
 col_venta = "Valor de Vtas:"
 col_utilidad = "Valor:"
@@ -201,9 +204,9 @@ else:
     margen_promedio = datos_filtrados[col_margen].replace([np.inf, -np.inf], np.nan).dropna().mean()
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("💸 Total Ventas", formatear_guaranies(total_venta))
-    col2.metric("📈 Total Utilidad", formatear_guaranies(total_utilidad))
-    col3.metric("📊 Margen Promedio", formatear_porcentaje(margen_promedio))
+    col1.metric(" Total Ventas", formatear_guaranies(total_venta))
+    col2.metric(" Total Utilidad", formatear_guaranies(total_utilidad))
+    col3.metric(" Margen Promedio", formatear_porcentaje(margen_promedio))
 
 
 # Gráfico de evolución mensual
@@ -278,7 +281,7 @@ else:
 
 #     # Crear gráfico
 #     fig_cmp = px.line(df_plot, x="MES_AÑO", y="Ventas", color="Tipo", markers=True,
-#                       title="📈 Comparativo Mensual de Ventas")
+#                       title=" Comparativo Mensual de Ventas")
 #     fig_cmp.update_layout(
 #         xaxis_title="Mes",
 #         yaxis_title="Ventas (₲)",
@@ -293,7 +296,7 @@ else:
 
 
 
-st.subheader("📘 Tabla resumen de MARGEN por Sector, Subsector y Marca")
+st.subheader(" Tabla resumen de MARGEN por Sector, Subsector y Marca")
 
 if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA", "LOCAL", "%:"]):
     tabla_margen = pd.pivot_table(
@@ -321,7 +324,7 @@ else:
     
 
 
-st.subheader("📘 Tabla resumen de VENTAS por Sector, Subsector y Marca")
+st.subheader(" Tabla resumen de VENTAS por Sector, Subsector y Marca")
 
 if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA", "LOCAL", "Valor de Vtas:"]):
     tabla_ventas = pd.pivot_table(
@@ -345,7 +348,7 @@ if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA"
     )
 
 
-st.subheader("📘 Tabla resumen de UTILIDAD por Sector, Subsector y Marca")
+st.subheader(" Tabla resumen de UTILIDAD por Sector, Subsector y Marca")
 
 if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL", "Valor:"]):
     tabla_utilidad = pd.pivot_table(
@@ -375,7 +378,7 @@ if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL"
 ##parte dos analisis de tiempo mas precisos
 
 # Extraer opciones únicas de meses disponibles
-df["MES_AÑO"] = df["FECHA"].dt.to_period("M") #esto es para que el mes y año se vean como un solo valor
+# df["MES_AÑO"] = df["FECHA"].dt.to_period("M") #esto es para que el mes y año se vean como un solo valor
   # mismo mes, pero del año anterior
 
 #que el selector sea tipo abril-2024
@@ -383,11 +386,15 @@ df["MES_AÑO"] = df["FECHA"].dt.to_period("M") #esto es para que el mes y año s
 # df["MES_AÑO"] = df["MES_AÑO"].dt.strftime("%B-%Y")
 
 meses_periodos = sorted(df["FECHA"].dt.to_period("M").dropna().unique())
+#filtrar solo desde 2024
+meses_periodos = [p for p in meses_periodos if p >= pd.Period("2024-01")]
+# Convertir a Period para que se pueda usar en el selectbox
+meses_periodos = [pd.Period(p, freq='M') for p in meses_periodos]
 mes_labels = [p.to_timestamp().strftime("%B-%Y").upper() for p in meses_periodos]
 label_to_period = dict(zip(mes_labels, meses_periodos))
 
 # Selector de mes con nombres
-mes_elegido_label = st.selectbox("🗓 Seleccioná un mes para comparar:", mes_labels)
+mes_elegido_label = st.selectbox("Seleccioná un mes para comparar:", mes_labels)
 mes_analizado = label_to_period[mes_elegido_label]
 mes_anterior = mes_analizado - 1
 mes_anterior_anio = mes_analizado - 12
@@ -416,7 +423,7 @@ else:
     ].copy()
 
 
-st.subheader(f"📋 Resumen de KPIs  con var mensual y anual – {mes_analizado}")
+st.subheader(f" Resumen de KPIs  con var mensual y anual – {mes_analizado}")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -450,9 +457,9 @@ delta_margen_aa = margen_actual - margen_anio_ant
 # Mostrar métricas
 col1, col2, col3 = st.columns(3)
 
-# 💰 Ventas Totales
+#  Ventas Totales
 col1.metric(
-    label="💰 Ventas Totales (Mes)",
+    label=" Ventas Totales (Mes)",
     value=formatear_guaranies(ventas_actual),
     delta=formatear_porcentaje(delta_ventas_ma)
 )
@@ -462,9 +469,9 @@ col1.metric(
     delta=formatear_porcentaje(delta_ventas_aa)
 )
 
-# 📈 Utilidad Total
+#  Utilidad Total
 col2.metric(
-    label="📈 Utilidad Total (Mes)",
+    label=" Utilidad Total (Mes)",
     value=formatear_guaranies(util_actual),
     delta=formatear_porcentaje(delta_util_ma)
 )
@@ -474,9 +481,9 @@ col2.metric(
     delta=formatear_porcentaje(delta_util_aa)
 )
 
-# 📊 Margen Promedio
+#  Margen Promedio
 col3.metric(
-    label="📊 Margen Promedio (Mes)",
+    label=" Margen Promedio (Mes)",
     value=formatear_porcentaje(margen_actual),
     delta=formatear_porcentaje(delta_margen_ma)
 )
@@ -490,7 +497,7 @@ col3.metric(
 
 
 
-st.subheader("📊 Variación Mensual de Ventas por Local y Sector")
+st.subheader(" Variación Mensual de Ventas por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 grupo = ["LOCAL", "SECTOR"]
@@ -507,9 +514,23 @@ variacion["variacion_%"] = ((variacion["ventas_mes_actual"] - variacion["ventas_
                             variacion["ventas_mes_anterior"].replace(0, pd.NA)) 
 variacion["diferencia"] = variacion["ventas_mes_actual"] - variacion["ventas_mes_anterior"]
 
+# Total global
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+ventas_global_anterior = datos_mes_anterior[col_venta].sum()
+# Fila de totales
+totales = pd.DataFrame({
+    "LOCAL": ["TOTAL"],
+    "SECTOR": [""],
+    "ventas_mes_actual": [ventas_global_actual],
+    "ventas_mes_anterior": [ventas_global_anterior],
+    "variacion_%": [(ventas_global_actual - ventas_global_anterior) / ventas_global_anterior] if ventas_global_anterior else [0],
+    "diferencia": [ventas_global_actual - ventas_global_anterior]
+})
+# Agregar fila de totales
+variacion = pd.concat([variacion, totales], ignore_index=True)
+
 #copiamos y mostramos la tabla mas lindo
 tabla_para_mostrar = variacion.copy()
-
 tabla_para_mostrar["ventas_mes_actual"] = tabla_para_mostrar["ventas_mes_actual"].map(formatear_guaranies)
 tabla_para_mostrar["ventas_mes_anterior"] = tabla_para_mostrar["ventas_mes_anterior"].map(formatear_guaranies)
 tabla_para_mostrar["variacion_%"] = tabla_para_mostrar["variacion_%"].map(formatear_porcentaje)
@@ -526,7 +547,7 @@ st.download_button(
 )
 
 
-st.subheader("📆 Comparativo Anual de Ventas por Local y Sector")
+st.subheader(" Comparativo Anual de Ventas por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 grupo = ["LOCAL", "SECTOR"]
@@ -550,6 +571,27 @@ comparativo_aa["variacion_%"] = (
 
 comparativo_aa["diferencia"] = comparativo_aa["ventas_actual"] - comparativo_aa["ventas_anio_anterior"]
 
+#total global
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+
+
+#total año anterior
+ventas_global_aa = datos_mes_aa[col_venta].sum()
+
+
+#fila de totales
+totales = pd.DataFrame({
+    "LOCAL": ["TOTAL"],
+    "SECTOR": [""],
+    "ventas_actual": [ventas_global_actual],
+    "ventas_anio_anterior": [ventas_global_aa],
+    "variacion_%": [(ventas_global_actual - ventas_global_aa) / ventas_global_aa] if ventas_global_aa else [0],
+    "diferencia": [ventas_global_actual - ventas_global_aa]
+})
+
+# Agregar fila de totales
+comparativo_aa = pd.concat([comparativo_aa, totales], ignore_index=True)
+
 # Formato para mostrar
 comparativo_mostrar = comparativo_aa.copy()
 comparativo_mostrar["ventas_actual"] = comparativo_mostrar["ventas_actual"].map(formatear_guaranies)
@@ -570,7 +612,7 @@ st.download_button(
 
 
 
-st.subheader("📊 Comparación Mensual de Ventas por Local")
+st.subheader(" Comparación Mensual de Ventas por Local")
 
 # Agrupar
 ventas_mes = datos_mes_actual.groupby("LOCAL")["Valor de Vtas:"].sum().reset_index().rename(columns={"Valor de Vtas:": "ventas_actual"})
@@ -608,7 +650,7 @@ fig_mes = go.Figure(data=[
 
 fig_mes.update_layout(
     barmode="group",
-    title=f"📊 Ventas por Local – {mes_analizado} vs {nombre_mes_ant}",
+    title=f" Ventas por Local – {mes_analizado} vs {nombre_mes_ant}",
     xaxis_title="Local",
     yaxis_title="Ventas (₲)",
     yaxis_tickprefix="₲ ",
@@ -624,8 +666,10 @@ st.plotly_chart(fig_mes, use_container_width=True)
 
 
 
-st.subheader("📍 Dispersión: Margen vs Utilidad por Subsector")
+st.subheader(" Dispersión: Margen vs Utilidad por Subsector")
 
+# --- Creación de las columnas para los filtros ---
+col1, col2, col3 = st.columns(3)
 # Opciones de agrupación
 opciones_agrupador = {
     "Subsector": "SUBSECTOR",
@@ -633,24 +677,49 @@ opciones_agrupador = {
     "Marca": "MARCA",
     "Local": "LOCAL"
 }
+with col1: # Columna 1: Selector de Agrupador
+    dimension_seleccionada = st.selectbox("Agrupar por:", list(opciones_agrupador.keys()))
+    agrupador = opciones_agrupador[dimension_seleccionada]
+    # Validación
+    if agrupador not in datos_mes_actual.columns:
+        st.warning(f"La columna {agrupador} no está disponible en los datos.")
+        st.stop()
 
-# Selector de dimensión
-dimension_seleccionada = st.selectbox("Agrupar por:", list(opciones_agrupador.keys()))
-agrupador = opciones_agrupador[dimension_seleccionada]
+locales_disponibles = sorted(datos_mes_actual['LOCAL'].unique().tolist())
+sectores_disponibles = sorted(datos_mes_actual['SECTOR'].unique().tolist())
+opciones_filtro_local = ["Todos los Locales"] + locales_disponibles
+opciones_filtro_sector = ["Todos los Sectores"] + sectores_disponibles
 
-# Validación
-if agrupador not in datos_mes_actual.columns:
-    st.warning(f"La columna {agrupador} no está disponible en los datos.")
+with col2: # Columna 2: Filtro de Local
+    local_seleccionado = st.selectbox(
+        label="Filtrar por Local:",
+        options=opciones_filtro_local,
+        index=0 # Por defecto "Todos los Locales"
+    )
+
+with col3: # Columna 3: Filtro de Sector
+    sector_seleccionado = st.selectbox(
+        label="Filtrar por Sector:",
+        options=opciones_filtro_sector,
+        index=0 # Por defecto "Todos los Sectores"
+    )
+
+if local_seleccionado != "Todos los Locales":
+    datos_filtrados = datos_filtrados[datos_filtrados['LOCAL'] == local_seleccionado]
+
+if sector_seleccionado != "Todos los Sectores":
+    datos_filtrados = datos_filtrados[datos_filtrados['SECTOR'] == sector_seleccionado]
+if agrupador not in datos_filtrados.columns:
+    st.warning(f"La columna '{agrupador}' no está disponible para la agrupación con los filtros actuales. Intenta seleccionar otra combinación.")
     st.stop()
-
-# Preparar datos
-datos_filtrados = datos_mes_actual[datos_mes_actual[agrupador].notna()].copy()
+# Eliminar NaNs en la columna del agrupador y asegurar que sea string
+datos_filtrados = datos_filtrados[datos_filtrados[agrupador].notna()].copy()
 datos_filtrados[agrupador] = datos_filtrados[agrupador].astype(str)
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
 
-# Agrupar y calcular
+# Agrupar y calcular (ahora sobre los datos filtrados)
 df_disp = datos_filtrados.groupby(agrupador).agg({
     col_venta: "sum",
     col_costo: "sum"
@@ -670,13 +739,22 @@ criterios_orden = {
     "Utilidad (₲)": "UTILIDAD",
     "Margen (%)": "MARGEN_%"
 }
-criterio_seleccionado = st.selectbox("🔽 Ordenar Top 20 por:", list(criterios_orden.keys()))
+st.write("---") # Separador visual
+criterio_seleccionado = st.selectbox(" Ordenar Top 20 por:", list(criterios_orden.keys()))
 columna_orden = criterios_orden[criterio_seleccionado]
+
 
 
 # Filtros visuales
 df_disp = df_disp[df_disp[col_venta] > 0]
 df_disp = df_disp.sort_values(columna_orden, ascending=False).head(20)
+
+if not df_disp.empty:
+    top_etiquetas = df_disp.head(15)[agrupador].tolist() # Mostrar las primeras 15 etiquetas
+    df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiquetas), "")
+else:
+    st.warning("No hay datos para mostrar con los filtros seleccionados.")
+    st.stop() # Detiene la ejecución si no hay datos
 
 top_etiquetas = df_disp.head(15)[agrupador].tolist()
 df_disp["ETIQUETA"] = df_disp[agrupador].where(df_disp[agrupador].isin(top_etiquetas), "")
@@ -709,22 +787,27 @@ fig_disp.update_traces(
 )
 
 fig_disp.update_layout(
-    xaxis_type="log",
+    xaxis_type="log", # Útil si la utilidad tiene un rango muy amplio
     xaxis_tickprefix="₲ ",
-    xaxis_tickformat=",",
-    yaxis_tickformat=".2f",
-    hovermode="closest"
+    xaxis_tickformat=",", # Separador de miles en el eje X
+    yaxis_tickformat=".2%", # Formato de porcentaje en el eje Y
+    hovermode="closest",
+    # Mejoras visuales adicionales para el gráfico
+    plot_bgcolor='#262730', # Fondo oscuro para el gráfico
+    paper_bgcolor='#262730', # Fondo oscuro para el área del gráfico
+    font_color='white' # Color de fuente general para el gráfico
 )
 
 st.plotly_chart(fig_disp, use_container_width=True)
 
 
 # Comparativo anual de ventas por local
-st.subheader("📊 Comparación Anual de Ventas por Local")
+st.subheader(" Comparación Anual de Ventas por Local")
 
 # Agrupación por LOCAL
 ventas_local = comparativo_aa.groupby("LOCAL")[["ventas_actual", "ventas_anio_anterior"]].sum().reset_index()
-
+#mostrar solo locales y no total
+ventas_local = ventas_local[ventas_local["LOCAL"] != "TOTAL"]
 # Etiquetas con formato ₲
 ventas_local["ventas_actual_txt"] = ventas_local["ventas_actual"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
 ventas_local["ventas_anio_anterior_txt"] = ventas_local["ventas_anio_anterior"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
@@ -753,7 +836,7 @@ fig = go.Figure(data=[
 
 fig.update_layout(
     barmode="group",
-    title=f"📊 Ventas por Local – {mes_analizado} vs año anterior",
+    title=f" Ventas por Local – {mes_analizado} vs año anterior",
     xaxis_title="Local",
     yaxis_title="Ventas (₲)",
     yaxis_tickprefix="₲ ",
@@ -772,7 +855,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 
 
-st.subheader("📈 Variación Mensual de Margen por Local y Sector")
+st.subheader(" Variación Mensual de Margen por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -794,6 +877,30 @@ m_anterior.drop(columns=[col_venta, col_costo], inplace=True)
 tabla_margen = pd.merge(m_actual, m_anterior, on=grupo, how="outer").fillna(0)
 tabla_margen["diferencia_margen"] = tabla_margen["margen_actual"] - tabla_margen["margen_anterior"]
 
+# margen global actual
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+costo_global_actual = datos_mes_actual[col_costo].sum()
+margen_global_actual = (ventas_global_actual - costo_global_actual) / ventas_global_actual if ventas_global_actual != 0 else 0
+
+# margen global mes anterior
+ventas_global_ma = datos_mes_anterior[col_venta].sum()
+costo_global_ma = datos_mes_anterior[col_costo].sum()
+margen_global_ma = (ventas_global_ma - costo_global_ma) / ventas_global_ma if ventas_global_ma != 0 else 0
+
+# variación del margen global
+variacion_margen_global = margen_global_actual - margen_global_ma
+
+# Crear la fila de totales
+totales_row = pd.DataFrame({
+    'LOCAL': ['TOTAL GLOBAL'],
+    'SECTOR': [''],  # Puedes dejarlo en blanco o poner 'Todos'
+    'margen_actual': [margen_global_actual],
+    'margen_anterior': [margen_global_ma],
+    'diferencia_margen': [variacion_margen_global]
+})
+ 
+tabla_margen = pd.concat([tabla_margen, totales_row], ignore_index=True)
+
 # Formato
 tabla_mostrar = tabla_margen.copy()
 tabla_mostrar["margen_actual"] = tabla_mostrar["margen_actual"].map(formatear_porcentaje)
@@ -813,7 +920,7 @@ st.download_button(
 
 
 
-st.subheader("📆 Comparativo Anual de Margen por Local y Sector")
+st.subheader(" Comparativo Anual de Margen por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -835,12 +942,39 @@ tabla_margen_aa = pd.merge(m_actual, m_aa, on=grupo, how="outer").fillna(0)
 # Variación de margen
 tabla_margen_aa["variacion_margen"] = tabla_margen_aa["margen_actual"] - tabla_margen_aa["margen_anio_anterior"]
 
-# Formato
-tabla_mostrar_aa = tabla_margen_aa.copy()
+# Margen Global Actual
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+costo_global_actual = datos_mes_actual[col_costo].sum()
+margen_global_actual = (ventas_global_actual - costo_global_actual) / ventas_global_actual if ventas_global_actual != 0 else 0
+
+# Margen Global Año Anterior
+ventas_global_aa = datos_mes_aa[col_venta].sum()
+costo_global_aa = datos_mes_aa[col_costo].sum()
+margen_global_aa = (ventas_global_aa - costo_global_aa) / ventas_global_aa if ventas_global_aa != 0 else 0
+
+
+# Variación del Margen Global
+variacion_margen_global = margen_global_actual - margen_global_aa
+
+# Crear la fila de totales
+totales_row = pd.DataFrame({
+    'LOCAL': ['TOTAL GLOBAL'],
+    'SECTOR': [''],  # Puedes dejarlo en blanco o poner 'Todos'
+    'margen_actual': [margen_global_actual],
+    'margen_anio_anterior': [margen_global_aa],
+    'variacion_margen': [variacion_margen_global]
+})
+
+
+tabla_margen_aa_con_totales = pd.concat([tabla_margen_aa, totales_row], ignore_index=True)
+
+# Formato para la tabla completa, incluyendo la fila de totales
+tabla_mostrar_aa = tabla_margen_aa_con_totales.copy()
 tabla_mostrar_aa["margen_actual"] = tabla_mostrar_aa["margen_actual"].map(formatear_porcentaje)
 tabla_mostrar_aa["margen_anio_anterior"] = tabla_mostrar_aa["margen_anio_anterior"].map(formatear_porcentaje)
 tabla_mostrar_aa["variacion_margen"] = tabla_mostrar_aa["variacion_margen"].map(formatear_porcentaje)
 
+# Mostrar la tabla en Streamlit
 st.dataframe(tabla_mostrar_aa.fillna(""), use_container_width=True)
 
 # Descarga 44
@@ -856,7 +990,7 @@ st.download_button(
 
 
 
-st.subheader("💵 Variación Mensual de Utilidad por Local y Sector")
+st.subheader(" Variación Mensual de Utilidad por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -877,8 +1011,30 @@ u_anterior = u_anterior[grupo + ["utilidad_anterior"]]
 # Unir y calcular
 tabla_utilidad = pd.merge(u_actual, u_anterior, on=grupo, how="outer").fillna(0)
 tabla_utilidad["variacion_%"] = ((tabla_utilidad["utilidad_actual"] - tabla_utilidad["utilidad_anterior"]) / 
-                                 tabla_utilidad["utilidad_anterior"].replace(0, pd.NA)) * 100
+                                 tabla_utilidad["utilidad_anterior"].replace(0, pd.NA)) 
 tabla_utilidad["diferencia"] = tabla_utilidad["utilidad_actual"] - tabla_utilidad["utilidad_anterior"]
+
+# Utilidad global actual
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+costo_global_actual = datos_mes_actual[col_costo].sum()
+utilidad_global_actual = ventas_global_actual - costo_global_actual
+# Utilidad global mes anterior
+ventas_global_ma = datos_mes_anterior[col_venta].sum()
+costo_global_ma = datos_mes_anterior[col_costo].sum()
+utilidad_global_ma = ventas_global_ma - costo_global_ma
+
+# Fila de totales
+totales_row = pd.DataFrame({
+    'LOCAL': ['TOTAL GLOBAL'],
+    'SECTOR': [''],  # Puedes dejarlo en blanco o poner 'Todos'
+    'utilidad_actual': [utilidad_global_actual],
+    'utilidad_anterior': [utilidad_global_ma],
+    'variacion_%': [(utilidad_global_actual - utilidad_global_ma) / utilidad_global_ma  if utilidad_global_ma != 0 else 0],
+    'diferencia': [utilidad_global_actual - utilidad_global_ma]
+})
+
+# Agregar fila de totales a la tabla
+tabla_utilidad = pd.concat([tabla_utilidad, totales_row], ignore_index=True)
 
 # Formato para mostrar
 tabla_u_mostrar = tabla_utilidad.copy()
@@ -899,7 +1055,7 @@ st.download_button(
 )
 
 
-st.subheader("📆 Comparativo Anual de Utilidad por Local y Sector")
+st.subheader(" Comparativo Anual de Utilidad por Local y Sector")
 
 col_venta = "Valor de Vtas:"
 col_costo = "Costo de Vtas:"
@@ -922,9 +1078,29 @@ tabla_utilidad_aa = pd.merge(u_actual, u_aa, on=grupo, how="outer").fillna(0)
 tabla_utilidad_aa["variacion_%"] = (
     (tabla_utilidad_aa["utilidad_actual"] - tabla_utilidad_aa["utilidad_anio_anterior"]) /
     tabla_utilidad_aa["utilidad_anio_anterior"].replace(0, pd.NA)
-) * 100
+) 
 tabla_utilidad_aa["diferencia"] = tabla_utilidad_aa["utilidad_actual"] - tabla_utilidad_aa["utilidad_anio_anterior"]
 
+#utilidad global actual
+ventas_global_actual = datos_mes_actual[col_venta].sum()
+costo_global_actual = datos_mes_actual[col_costo].sum()
+utilidad_global_actual = ventas_global_actual - costo_global_actual
+#utilidad global año anterior
+ventas_global_aa = datos_mes_aa[col_venta].sum()
+costo_global_aa = datos_mes_aa[col_costo].sum()
+utilidad_global_aa = ventas_global_aa - costo_global_aa
+
+#fila de totales
+totales_row_aa = pd.DataFrame({
+    'LOCAL': ['TOTAL GLOBAL'],
+    'SECTOR': [''],  # Puedes dejarlo en blanco o poner 'Todos'
+    'utilidad_actual': [utilidad_global_actual],
+    'utilidad_anio_anterior': [utilidad_global_aa],
+    'variacion_%': [(utilidad_global_actual - utilidad_global_aa) / utilidad_global_aa if utilidad_global_aa != 0 else 0],
+    'diferencia': [utilidad_global_actual - utilidad_global_aa]
+})
+
+tabla_utilidad_aa = pd.concat([tabla_utilidad_aa, totales_row_aa], ignore_index=True)
 # Formato para mostrar
 tabla_mostrar_aa = tabla_utilidad_aa.copy()
 tabla_mostrar_aa["utilidad_actual"] = tabla_mostrar_aa["utilidad_actual"].map(formatear_guaranies)
@@ -949,7 +1125,7 @@ st.download_button(
 
 
 
-st.subheader("❌ Productos en Quiebre Total")
+st.subheader(" Productos en Quiebre Total")
 
 # Filtrar productos vendidos sin stock
 quiebre = datos_mes_actual.copy()
@@ -962,8 +1138,8 @@ quiebre = quiebre[
 columnas_mostrar = ["LOCAL", "SECTOR", "SUBSECTOR", "MARCA", "DESCRIPCION", 
                     "Valor de Vtas:", "Valor de Stock:", "Fec.Ult Compra:"]
 
-# st.write("📋 Columnas en df:", df.columns.tolist())
-# st.write("📋 Columnas en quiebre:", quiebre.columns.tolist())
+# st.write(" Columnas en df:", df.columns.tolist())
+# st.write(" Columnas en quiebre:", quiebre.columns.tolist())
 
 # Verificar columnas disponibles
 columnas_presentes = [col for col in columnas_mostrar if col in quiebre.columns]
@@ -1005,7 +1181,7 @@ st.download_button(
 
 
 
-st.subheader("⚠️ Productos en Sobre Stock")
+st.subheader(" Productos en Sobre Stock")
 # Copia del mes actual
 sobre_stock = datos_mes_actual.copy()
 
@@ -1024,9 +1200,30 @@ columnas_sobre = [
     "Valor de Vtas:", "Valor de Stock:", "MESES DE STOCK"
 ]
 
+
 # Verificar columnas disponibles
 columnas_presentes = [col for col in columnas_sobre if col in sobre_stock.columns]
 sobre_mostrar = sobre_stock[columnas_presentes].copy()
+
+#agregar total de Valor de Vtas y Valor de Stock
+total_stock = sobre_mostrar["Valor de Stock:"].sum()
+total_ventas = sobre_mostrar["Valor de Vtas:"].sum()
+
+# Agregar fila de totales
+totales_row = pd.DataFrame({
+    'LOCAL': ['TOTALES'],
+    'SECTOR': [''],
+    'SUBSECTOR': [''],
+    'MARCA': [''],
+    'Fec.Ult Compra:': [''],
+    'Valor de Vtas:': [formatear_guaranies(total_ventas)],
+    'Valor de Stock:': [formatear_guaranies(total_stock)],
+    'MESES DE STOCK': [''],
+    'Días sin compra': ['']
+})
+
+sobre_mostrar = pd.concat([sobre_mostrar, totales_row], ignore_index=True)
+
 
 # Formato de fechas y moneda
 if "Fec.Ult Compra:" in sobre_mostrar.columns:
@@ -1058,7 +1255,7 @@ st.download_button(
 
 
 # Tabla de margen máximo por sector, subsector y marca
-st.subheader("📘 MARGEN maximo por Sector, Subsector y Marca")
+st.subheader(" MARGEN maximo por Sector, Subsector y Marca")
 
 if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "MARCA", "LOCAL", "%:"]):
     # Crear tabla pivot (sin formatear aún)
@@ -1096,7 +1293,7 @@ else:
 
 
 
-st.subheader("📉 Subsectores con Margen menor a 10%")
+st.subheader("Subsectores con Margen menor a 10%")
 
 if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL", "%:"]):
     # Agrupación por SECTOR, SUBSECTOR y LOCAL

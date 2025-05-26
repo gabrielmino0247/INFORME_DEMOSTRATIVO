@@ -1,4 +1,4 @@
-
+import pandas as pd
 import streamlit as st
 
 def mostrar_comparativos_variacion(  
@@ -25,8 +25,40 @@ def mostrar_comparativos_variacion(
             return
 
         tabla_mostrar = tabla.copy()
-        tabla_mostrar["variacion_%"] = tabla_mostrar["variacion_%"].map(formatear_porcentaje)
-        tabla_mostrar["diferencia"] = tabla_mostrar["diferencia"].map(formatear_guaranies)
+        tabla_mostrar = tabla.copy()
+
+        if "variacion_%" in tabla_mostrar:
+            tabla_mostrar["variacion_%"] = tabla_mostrar["variacion_%"].map(formatear_porcentaje)
+
+        if "utilidad_actual" in tabla_mostrar:
+            tabla_mostrar["utilidad_actual"] = tabla_mostrar["utilidad_actual"].map(formatear_guaranies)
+
+        if "utilidad_anterior" in tabla_mostrar:
+            tabla_mostrar["utilidad_anterior"] = tabla_mostrar["utilidad_anterior"].map(formatear_guaranies)
+
+        if "margen_actual" in tabla_mostrar:
+            tabla_mostrar["margen_actual"] = tabla_mostrar["margen_actual"].map(formatear_porcentaje)
+
+        if "margen_anterior" in tabla_mostrar:
+            tabla_mostrar["margen_anterior"] = tabla_mostrar["margen_anterior"].map(formatear_porcentaje)
+
+        if "ventas_mes_actual" in tabla_mostrar:
+            tabla_mostrar["ventas_mes_actual"] = tabla_mostrar["ventas_mes_actual"].map(formatear_guaranies)
+
+        if "ventas_mes_anterior" in tabla_mostrar:
+            tabla_mostrar["ventas_mes_anterior"] = tabla_mostrar["ventas_mes_anterior"].map(formatear_guaranies)
+        if "ventas_anio_actual" in tabla_mostrar:
+            tabla_mostrar["ventas_anio_actual"] = tabla_mostrar["ventas_anio_actual"].map(formatear_guaranies)
+        if "ventas_anio_anterior" in tabla_mostrar:
+            tabla_mostrar["ventas_anio_anterior"] = tabla_mostrar["ventas_anio_anterior"].map(formatear_guaranies)
+        if "diferencia" in tabla_mostrar:
+            tabla_mostrar["diferencia"] = tabla_mostrar["diferencia"].map(formatear_guaranies)
+        if "ventas_actual" in tabla_mostrar:
+            tabla_mostrar["ventas_actual"] = tabla_mostrar["ventas_actual"].map(formatear_guaranies)
+        if "margen_anio_anterior" in tabla_mostrar:
+            tabla_mostrar["margen_anio_anterior"] = tabla_mostrar["margen_anio_anterior"].map(formatear_porcentaje)
+        if "utilidad_anio_anterior" in tabla_mostrar:
+            tabla_mostrar["utilidad_anio_anterior"] = tabla_mostrar["utilidad_anio_anterior"].map(formatear_guaranies)
 
         st.subheader(f"{tipo} de {nombre}")
         st.dataframe(tabla_mostrar, use_container_width=True)

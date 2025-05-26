@@ -430,59 +430,95 @@ if seccion != "📊 Vista General":
     col_costo = "Costo de Vtas:"
     grupo = ["LOCAL", "SECTOR"]
 
-    # Recalcular tabla_ventas_mensual
-    actual_grouped = datos_mes_actual.groupby(grupo)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_mes_actual"})
-    anterior_grouped = datos_mes_anterior.groupby(grupo)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_mes_anterior"})
-    tabla_ventas_mensual = pd.merge(actual_grouped, anterior_grouped, on=grupo, how="outer").fillna(0)
+    
+    # ======================= TABLAS DE VARIACIÓN PARA NUEVO AGRUPADOR =======================
+    agrupador = ["LOCAL", "SECTOR", "SUBSECTOR", "MARCA"]
+    col_venta = "Valor de Vtas:"
+    col_costo = "Costo de Vtas:"
+
+    # Variación mensual de ventas
+    actual_grouped = datos_mes_actual.groupby(agrupador)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_mes_actual"})
+    anterior_grouped = datos_mes_anterior.groupby(agrupador)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_mes_anterior"})
+
+    tabla_ventas_mensual = pd.merge(actual_grouped, anterior_grouped, on=agrupador, how="outer").fillna(0)
     tabla_ventas_mensual["variacion_%"] = ((tabla_ventas_mensual["ventas_mes_actual"] - tabla_ventas_mensual["ventas_mes_anterior"]) /
-                                        tabla_ventas_mensual["ventas_mes_anterior"].replace(0, pd.NA))
+                                        tabla_ventas_mensual["ventas_mes_anterior"].replace(0, pd.NA)) 
     tabla_ventas_mensual["diferencia"] = tabla_ventas_mensual["ventas_mes_actual"] - tabla_ventas_mensual["ventas_mes_anterior"]
 
-    # tabla_margen_mensual
-    m_actual = datos_mes_actual.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    # Variación mensual de margen
+    m_actual = datos_mes_actual.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
     m_actual["margen_actual"] = (m_actual[col_venta] - m_actual[col_costo]) / m_actual[col_venta]
-    m_anterior = datos_mes_anterior.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
-    m_anterior["margen_anterior"] = (m_anterior[col_venta] - m_anterior[col_costo]) / m_anterior[col_venta]
-    tabla_margen_mensual = pd.merge(m_actual[grupo + ["margen_actual"]], m_anterior[grupo + ["margen_anterior"]], on=grupo, how="outer").fillna(0)
-    tabla_margen_mensual["variacion_%"] = tabla_margen_mensual["margen_actual"] - tabla_margen_mensual["margen_anterior"]
-    tabla_margen_mensual["diferencia"] = tabla_margen_mensual["variacion_%"]
+    m_actual.drop(columns=[col_venta, col_costo], inplace=True)
 
-    # tabla_utilidad_mensual
-    u_actual = datos_mes_actual.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    m_anterior = datos_mes_anterior.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    m_anterior["margen_anterior"] = (m_anterior[col_venta] - m_anterior[col_costo]) / m_anterior[col_venta]
+    m_anterior.drop(columns=[col_venta, col_costo], inplace=True)
+
+    tabla_margen_mensual = pd.merge(m_actual, m_anterior, on=agrupador, how="outer").fillna(0)
+    tabla_margen_mensual["variacion_%"] = tabla_margen_mensual["margen_actual"] - tabla_margen_mensual["margen_anterior"]
+
+    # Variación mensual de utilidad
+    u_actual = datos_mes_actual.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
     u_actual["utilidad_actual"] = u_actual[col_venta] - u_actual[col_costo]
-    u_anterior = datos_mes_anterior.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+
+    u_anterior = datos_mes_anterior.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
     u_anterior["utilidad_anterior"] = u_anterior[col_venta] - u_anterior[col_costo]
-    tabla_utilidad_mensual = pd.merge(u_actual[grupo + ["utilidad_actual"]], u_anterior[grupo + ["utilidad_anterior"]], on=grupo, how="outer").fillna(0)
+
+    tabla_utilidad_mensual = pd.merge(
+        u_actual[agrupador + ["utilidad_actual"]],
+        u_anterior[agrupador + ["utilidad_anterior"]],
+        on=agrupador,
+        how="outer"
+    ).fillna(0)
+
     tabla_utilidad_mensual["variacion_%"] = ((tabla_utilidad_mensual["utilidad_actual"] - tabla_utilidad_mensual["utilidad_anterior"]) /
-                                            tabla_utilidad_mensual["utilidad_anterior"].replace(0, pd.NA))
+                                            tabla_utilidad_mensual["utilidad_anterior"].replace(0, pd.NA)) 
     tabla_utilidad_mensual["diferencia"] = tabla_utilidad_mensual["utilidad_actual"] - tabla_utilidad_mensual["utilidad_anterior"]
 
-    # Anual: ventas
-    actual_grouped = datos_mes_actual.groupby(grupo)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_actual"})
-    aa_grouped = datos_mes_aa.groupby(grupo)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_anio_anterior"})
-    tabla_ventas_anual = pd.merge(actual_grouped, aa_grouped, on=grupo, how="outer").fillna(0)
+    # =================== REPETIR PARA AÑO ANTERIOR ===================
+
+    actual_grouped_aa = datos_mes_actual.groupby(agrupador)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_actual"})
+    anterior_grouped_aa = datos_mes_aa.groupby(agrupador)[col_venta].sum().reset_index().rename(columns={col_venta: "ventas_anio_anterior"})
+
+    tabla_ventas_anual = pd.merge(actual_grouped_aa, anterior_grouped_aa, on=agrupador, how="outer").fillna(0)
     tabla_ventas_anual["variacion_%"] = ((tabla_ventas_anual["ventas_actual"] - tabla_ventas_anual["ventas_anio_anterior"]) /
-                                        tabla_ventas_anual["ventas_anio_anterior"].replace(0, pd.NA))
+                                        tabla_ventas_anual["ventas_anio_anterior"].replace(0, pd.NA)) 
     tabla_ventas_anual["diferencia"] = tabla_ventas_anual["ventas_actual"] - tabla_ventas_anual["ventas_anio_anterior"]
 
-    # Anual: margen
-    m_actual = datos_mes_actual.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
-    m_actual["margen_actual"] = (m_actual[col_venta] - m_actual[col_costo]) / m_actual[col_venta]
-    m_aa = datos_mes_aa.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
-    m_aa["margen_anio_anterior"] = (m_aa[col_venta] - m_aa[col_costo]) / m_aa[col_venta]
-    tabla_margen_anual = pd.merge(m_actual[grupo + ["margen_actual"]], m_aa[grupo + ["margen_anio_anterior"]], on=grupo, how="outer").fillna(0)
-    tabla_margen_anual["variacion_%"] = tabla_margen_anual["margen_actual"] - tabla_margen_anual["margen_anio_anterior"]
-    tabla_margen_anual["diferencia"] = tabla_margen_anual["variacion_%"]
+    # Margen anual
+    m_actual_aa = datos_mes_actual.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    m_actual_aa["margen_actual"] = (m_actual_aa[col_venta] - m_actual_aa[col_costo]) / m_actual_aa[col_venta]
 
-    # Anual: utilidad
-    u_actual = datos_mes_actual.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
-    u_actual["utilidad_actual"] = u_actual[col_venta] - u_actual[col_costo]
-    u_aa = datos_mes_aa.groupby(grupo).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
-    u_aa["utilidad_anio_anterior"] = u_aa[col_venta] - u_aa[col_costo]
-    tabla_utilidad_anual = pd.merge(u_actual[grupo + ["utilidad_actual"]], u_aa[grupo + ["utilidad_anio_anterior"]], on=grupo, how="outer").fillna(0)
+    m_anterior_aa = datos_mes_aa.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    m_anterior_aa["margen_anio_anterior"] = (m_anterior_aa[col_venta] - m_anterior_aa[col_costo]) / m_anterior_aa[col_venta]
+
+    tabla_margen_anual = pd.merge(
+        m_actual_aa[agrupador + ["margen_actual"]],
+        m_anterior_aa[agrupador + ["margen_anio_anterior"]],
+        on=agrupador,
+        how="outer"
+    ).fillna(0)
+
+    tabla_margen_anual["variacion_%"] = tabla_margen_anual["margen_actual"] - tabla_margen_anual["margen_anio_anterior"]
+
+    # Utilidad anual
+    u_actual_aa = datos_mes_actual.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    u_actual_aa["utilidad_actual"] = u_actual_aa[col_venta] - u_actual_aa[col_costo]
+
+    u_anterior_aa = datos_mes_aa.groupby(agrupador).agg({col_venta: "sum", col_costo: "sum"}).reset_index()
+    u_anterior_aa["utilidad_anio_anterior"] = u_anterior_aa[col_venta] - u_anterior_aa[col_costo]
+
+    tabla_utilidad_anual = pd.merge(
+        u_actual_aa[agrupador + ["utilidad_actual"]],
+        u_anterior_aa[agrupador + ["utilidad_anio_anterior"]],
+        on=agrupador,
+        how="outer"
+    ).fillna(0)
+
     tabla_utilidad_anual["variacion_%"] = ((tabla_utilidad_anual["utilidad_actual"] - tabla_utilidad_anual["utilidad_anio_anterior"]) /
-                                        tabla_utilidad_anual["utilidad_anio_anterior"].replace(0, pd.NA))
+                                        tabla_utilidad_anual["utilidad_anio_anterior"].replace(0, pd.NA)) 
     tabla_utilidad_anual["diferencia"] = tabla_utilidad_anual["utilidad_actual"] - tabla_utilidad_anual["utilidad_anio_anterior"]
+
 
 
 if seccion == "📆 Comparativos Mensuales y Anuales":

@@ -13,16 +13,11 @@ import requests
 import tempfile
 from comparativos_variacion import mostrar_comparativos_variacion
 
-
 st.set_page_config(page_title="Informe por Jefe", layout="wide")
-
-
 
 # locale.setlocale(locale.LC_TIME, "es_PY.UTF-8")
  # Para sistemas Linux/mac
 # En Windows puede ser "Spanish_Paraguay" o "es_PY" si falla, probamos más abajo
-
-
 
 # url = "https://docs.google.com/spreadsheets/d/1sueaCR4IPwVnVBoHkl5w4T1eEd9xLH6I/edit?usp=sharing"
 
@@ -34,9 +29,6 @@ st.set_page_config(page_title="Informe por Jefe", layout="wide")
 # =========================
 
 usuarios_validos = {k.lower(): v for k, v in st.secrets["usuarios"].items()}
-
-
-
 
 if "logueado" not in st.session_state:
     st.session_state.logueado = False
@@ -67,7 +59,6 @@ def generar_excel(df, nombre_hoja="Resumen"):
     output.seek(0)
     return output
 
-# Función para formato paraguayo con símbolo ₲
 def formatear_guaranies(valor):
     try:
         if pd.isna(valor):
@@ -76,7 +67,6 @@ def formatear_guaranies(valor):
     except:
         return valor
 
-# Función para formato sin símbolo (ej. margen)
 def formatear_numero(valor):
     try:
         if pd.isna(valor):
@@ -93,8 +83,6 @@ def formatear_porcentaje(valor):
         return f"{valor:.2f}%".replace(".", ",")
     except:
         return valor
-
-
 
 def formatear_numeroint(valor):
     try:
@@ -124,9 +112,6 @@ with st.sidebar:
         "📊 Comparativo por Tipo de Variación"
     ])    
 
-
-# Título
-
 # Cargar los datos
 @st.cache_data
 def cargar_datos_desde_dropbox():
@@ -150,8 +135,6 @@ st.session_state.df = df
 
 # Validar columna clave
 usuario = st.session_state.usuario
-
-
 
 if seccion == "📊 Vista General":
     st.title(" Informe Comercial por Jefe de Área")
@@ -392,11 +375,7 @@ if seccion == "📊 Vista General":
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
 
-
 #hasta aca es vista gral
-
-
-
 
 ##parte dos analisis de tiempo mas precisos
 

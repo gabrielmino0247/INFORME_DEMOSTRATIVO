@@ -189,8 +189,8 @@ if seccion == "📊 Vista General":
         tabla_para_mostrar["FECHA"] = tabla_para_mostrar["FECHA"].dt.strftime("%d/%m/%Y")
 
     #AÑADIMOS LOS CAMPOS CALCULADOS DE MESES DE STOCK Y DIAS DE STOCK
-    tabla_para_mostrar["MESES_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / tabla_para_mostrar["Valor de Vtas:"]).fillna(0)
-    tabla_para_mostrar["DIAS_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / (tabla_para_mostrar["Valor de Vtas:"] / 30)).fillna(0)
+    tabla_para_mostrar["MESES_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / tabla_para_mostrar["Valor de Vtas:"]).replace([np.inf, -np.inf], np.nan).fillna(0).fillna(0)
+    tabla_para_mostrar["DIAS_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / (tabla_para_mostrar["Valor de Vtas:"] / 30)).replace([np.inf, -np.inf], np.nan).fillna(0).fillna(0)
     tabla_para_mostrar["QUIEBRE_INMINENTE"] = np.where((0 < tabla_para_mostrar["DIAS_DE_STOCK"]) & (tabla_para_mostrar["DIAS_DE_STOCK"] < 20), "QUIEBRE INMINENTE", "")
     # Formatear columnas numéricas
     if "Valor de Vtas:" in tabla_para_mostrar.columns:

@@ -188,8 +188,41 @@ if seccion == "📊 Vista General":
     if "FECHA" in tabla_para_mostrar.columns:
         tabla_para_mostrar["FECHA"] = tabla_para_mostrar["FECHA"].dt.strftime("%d/%m/%Y")
 
+    #AÑADIMOS LOS CAMPOS CALCULADOS DE MESES DE STOCK Y DIAS DE STOCK
+    tabla_para_mostrar["MESES_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / tabla_para_mostrar["Valor de Vtas:"]).fillna(0)
+    tabla_para_mostrar["DIAS_DE_STOCK"] = (tabla_para_mostrar["Valor de Stock:"] / (tabla_para_mostrar["Valor de Vtas:"] / 30)).fillna(0)
+    tabla_para_mostrar["QUIEBRE_INMINENTE"] = np.where((0 < tabla_para_mostrar["DIAS_DE_STOCK"]) & (tabla_para_mostrar["DIAS_DE_STOCK"] < 20), "QUIEBRE INMINENTE", "")
+    # Formatear columnas numéricas
+    if "Valor de Vtas:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Valor de Vtas:"] = tabla_para_mostrar["Valor de Vtas:"].apply(formatear_guaranies)
+    if "Costo de Vtas:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Costo de Vtas:"] = tabla_para_mostrar["Costo de Vtas:"].apply(formatear_guaranies)
+    if "Valor de Compras:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Valor de Compras:"] = tabla_para_mostrar["Valor de Compras:"].apply(formatear_guaranies)
+    if "Fec.Ult Compra:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Fec.Ult Compra:"] = tabla_para_mostrar["Fec.Ult Compra:"].dt.strftime("%d/%m/%Y")
+    if "Valor:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Valor:"] = tabla_para_mostrar["Valor:"].apply(formatear_guaranies)
+    if "%:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["%:"] = tabla_para_mostrar["%:"].apply(formatear_porcentaje)
+    if "Valor de Stock:" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["Valor de Stock:"] = tabla_para_mostrar["Valor de Stock:"].apply(formatear_guaranies)
+    if "MESES_DE_STOCK" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["MESES_DE_STOCK"] = tabla_para_mostrar["MESES_DE_STOCK"].apply(formatear_numero)
+    if "DIAS_DE_STOCK" in tabla_para_mostrar.columns:
+        tabla_para_mostrar["DIAS_DE_STOCK"] = tabla_para_mostrar["DIAS_DE_STOCK"].apply(formatear_numeroint)
+    
     # Mostrar tabla con fecha formateada
     st.dataframe(tabla_para_mostrar, use_container_width=True)
+
+    excel_gral = generar_excel(tabla_para_mostrar, "Utilidad")
+    st.download_button(
+        label="⬇️ Descargar Demo General",
+        data=excel_gral,
+        file_name=f"demo_gral_{usuario}.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    
     
 
     # KPIs

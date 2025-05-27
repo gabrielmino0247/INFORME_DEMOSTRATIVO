@@ -215,7 +215,7 @@ if seccion == "📊 Vista General":
     # Mostrar tabla con fecha formateada
     st.dataframe(tabla_para_mostrar, use_container_width=True)
 
-    excel_gral = generar_excel(tabla_para_mostrar, "Utilidad")
+    excel_gral = generar_excel(tabla_para_mostrar, "General")
     st.download_button(
         label="⬇️ Descargar Demo General",
         data=excel_gral,

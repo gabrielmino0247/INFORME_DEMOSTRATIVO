@@ -1451,9 +1451,9 @@ if seccion == "📅 Quiebres, Sobre stock y Margen <10%":
 
     st.subheader("Subsectores con Margen menor a 10%")
 
-    if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL", "%:"]):
+    if all(col in datos_filtrados.columns for col in ["SECTOR", "SUBSECTOR", "LOCAL", "MARCA", "%:"]):
         # Agrupación por SECTOR, SUBSECTOR y LOCAL
-        tabla_subsector = datos_filtrados.groupby(["SECTOR", "SUBSECTOR", "LOCAL"])["%:"].mean().reset_index()
+        tabla_subsector = datos_filtrados.groupby(["LOCAL","SECTOR", "SUBSECTOR",  "MARCA"])["%:"].mean().reset_index()
 
         # Filtrar donde el margen promedio sea menor al 10%
         tabla_filtrada = tabla_subsector[tabla_subsector["%:"] < 0.1].copy()

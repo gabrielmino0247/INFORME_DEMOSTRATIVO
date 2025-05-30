@@ -97,6 +97,18 @@ def estilo_delta(valor):
     color = "green" if valor >= 0 else "red"
     return f":{color}[{flecha} {formatear_porcentaje(valor)}]"
 
+def formatear_millones(valor):
+    if pd.isna(valor):
+        return ""
+    elif valor >= 1_000_000_000:
+        return f"{valor/1_000_000_000:.1f}MM"
+    elif valor >= 1_000_000:
+        return f"{valor/1_000_000:.1f}M"
+    elif valor >= 1_000:
+        return f"{valor/1_000:.1f}K"
+    else:
+        return str(valor)
+
 with st.sidebar:
     st.markdown(f"👤 Usuario: `{st.session_state.usuario}`")
     if st.button("🔓 Cerrar sesión"):
@@ -141,7 +153,7 @@ if seccion == "📊 Vista General":
 
     # 🧠 Cargar df solo si no está en memoria
     if "df" not in st.session_state:
-        with st.spinner("Cargando datos desde Dropbox..."):
+        with st.spinner("Cargando datos..."):
             st.session_state.df = cargar_datos_desde_dropbox()
 
     # ✅ Ya disponible para usar
@@ -158,10 +170,19 @@ if seccion == "📊 Vista General":
     min_fecha = pd.to_datetime("2024-01-01")
     max_fecha = df["FECHA"].max()
 
-    st.markdown("###  Filtro de fechas para la vista general")
+    #Definir valor por defecto (últimos 3 meses)
+    default_inicio = (max_fecha - pd.DateOffset(months=3)).date()
+    default_fin = max_fecha.date()
+
+    # Asegurarse que default_inicio no sea menor al mínimo
+    if default_inicio < min_fecha.date():
+        default_inicio = min_fecha.date()
+
+    # Selector de fechas
+    st.markdown("### Filtro de fechas para la vista general")
     fecha_inicio, fecha_fin = st.date_input(
         "Seleccioná el rango de fechas para KPIs y tablas:",
-        value=(min_fecha.date(), max_fecha.date()),
+        value=(default_inicio, default_fin),
         min_value=min_fecha.date(),
         max_value=max_fecha.date()
     )
@@ -266,6 +287,8 @@ if seccion == "📊 Vista General":
     if "LOCAL" in datos_filtrados.columns and col_venta in datos_filtrados.columns:
         ventas_por_local = datos_filtrados.groupby("LOCAL")[col_venta].sum().reset_index()
         ventas_por_local = ventas_por_local.sort_values(by=col_venta, ascending=False)
+        ventas_por_local["ventas_format"] = ventas_por_local[col_venta].map(formatear_millones)
+
 
         fig_local = px.bar(
             ventas_por_local,
@@ -273,17 +296,17 @@ if seccion == "📊 Vista General":
             y=col_venta,
             title="Ventas por Sucursal",
             labels={col_venta: "Ventas"},
-            text=col_venta
+            text="ventas_format"
         )
         fig_local.update_layout(
             xaxis_title="Sucursal",
             yaxis_title="Ventas (₲)",
             yaxis_tickprefix="₲ ",
-            yaxis_tickformat=",",
+            yaxis_tickformat=",.2s",
             uniformtext_minsize=8,
             uniformtext_mode='hide'
         )
-        fig_local.update_traces(texttemplate='%{text:,.0f}', textposition='outside')
+        fig_local.update_traces(texttemplate='%{text}', textposition='outside')
 
         st.plotly_chart(fig_local, use_container_width=True)
     else:
@@ -753,8 +776,8 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     ventas_local_mes = pd.merge(ventas_mes, ventas_ant, on="LOCAL", how="outer").fillna(0)
 
     # Generar etiquetas con formato ₲
-    ventas_local_mes["ventas_actual_txt"] = ventas_local_mes["ventas_actual"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
-    ventas_local_mes["ventas_anterior_txt"] = ventas_local_mes["ventas_anterior"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
+    ventas_local_mes["ventas_actual_txt"] = ventas_local_mes["ventas_actual"].map(formatear_millones)
+    ventas_local_mes["ventas_anterior_txt"] = ventas_local_mes["ventas_anterior"].map(formatear_millones)
 
     # Nombre del mes anterior para el título
     nombre_mes_ant = (mes_analizado - 1).strftime("%B-%Y").upper()
@@ -880,7 +903,7 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
 
     # Filtros visuales
     df_disp = df_disp[df_disp[col_venta] > 0]
-    df_disp = df_disp.sort_values(columna_orden, ascending=False).head(20)
+    df_disp = df_disp.sort_values(columna_orden, ascending=False).head(50)
 
     if not df_disp.empty:
         top_etiquetas = df_disp.head(15)[agrupador].tolist() # Mostrar las primeras 15 etiquetas
@@ -942,8 +965,8 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     #mostrar solo locales y no total
     ventas_local = ventas_local[ventas_local["LOCAL"] != "TOTAL"]
     # Etiquetas con formato ₲
-    ventas_local["ventas_actual_txt"] = ventas_local["ventas_actual"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
-    ventas_local["ventas_anio_anterior_txt"] = ventas_local["ventas_anio_anterior"].apply(lambda x: f"₲ {int(x):,}".replace(",", "."))
+    ventas_local["ventas_actual_txt"] = ventas_local["ventas_actual"].map(formatear_millones)
+    ventas_local["ventas_anio_anterior_txt"] = ventas_local["ventas_anio_anterior"].map(formatear_millones)
 
     # Crear gráfico con etiquetas
     fig = go.Figure(data=[

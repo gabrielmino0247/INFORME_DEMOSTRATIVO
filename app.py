@@ -158,7 +158,7 @@ if seccion == "📊 Vista General":
     max_fecha = df["FECHA"].max()
 
     #Definir valor por defecto (últimos 3 meses)
-    default_inicio = (max_fecha - pd.DateOffset(months=3)).date()
+    default_inicio = (max_fecha - pd.DateOffset(months=1)).date()
     default_fin = max_fecha.date()
 
     # Asegurarse que default_inicio no sea menor al mínimo

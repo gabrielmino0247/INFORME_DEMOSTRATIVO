@@ -130,6 +130,10 @@ def cargar_datos_desde_dropbox():
     return df
 
 df = cargar_datos_desde_dropbox()
+
+#filtrar de df para sacar o evitas los que tienen cero en vtas y stock
+df = df[(df["Valor de Vtas:"].fillna(0) != 0) | (df["Valor de Stock:"].fillna(0) != 0)]
+
 st.session_state.df = df
 
 # Validar columna clave

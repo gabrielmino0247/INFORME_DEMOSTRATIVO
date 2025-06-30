@@ -91,3 +91,39 @@ def mostrar_comparativos_variacion(
             seccion_variacion("Ventas (anual)", tabla_ventas_anual[tabla_ventas_anual["variacion_%"] < 0], "variacion_%", "Disminución")
             seccion_variacion("Margen (anual)", tabla_margen_anual[tabla_margen_anual["variacion_%"] < 0], "variacion_%", "Disminución")
             seccion_variacion("Utilidad (anual)", tabla_utilidad_anual[tabla_utilidad_anual["variacion_%"] < 0], "variacion_%", "Disminución")
+
+    # --- NUEVA TABLA: Categorías generales que han bajado respecto al año anterior ---
+    st.subheader("Categorías generales que han bajado en ventas respecto al año anterior")
+    # Filtrar las que bajaron
+    categorias_bajaron = tabla_ventas_anual[tabla_ventas_anual["ventas_actual"] < tabla_ventas_anual["ventas_anio_anterior"]].copy()
+    # Unir con ventas mes anterior
+    ventas_mes_ant = tabla_ventas_mensual[["LOCAL", "SECTOR", "SUBSECTOR", "MARCA", "ventas_mes_anterior"]].copy()
+    categorias_bajaron = categorias_bajaron.merge(ventas_mes_ant, on=["LOCAL", "SECTOR", "SUBSECTOR", "MARCA"], how="left")
+    # Unir con margen actual y margen año anterior
+    margen_actual = tabla_margen_anual[["LOCAL", "SECTOR", "SUBSECTOR", "MARCA", "margen_actual", "margen_anio_anterior"]].copy()
+    categorias_bajaron = categorias_bajaron.merge(margen_actual, on=["LOCAL", "SECTOR", "SUBSECTOR", "MARCA"], how="left")
+    # Unir con margen mes anterior
+    margen_mes_ant = tabla_margen_mensual[["LOCAL", "SECTOR", "SUBSECTOR", "MARCA", "margen_anterior"]].copy()
+    categorias_bajaron = categorias_bajaron.merge(margen_mes_ant, on=["LOCAL", "SECTOR", "SUBSECTOR", "MARCA"], how="left")
+    # Seleccionar y renombrar columnas para mostrar
+    cols = [
+        "LOCAL", "SECTOR", "SUBSECTOR", "MARCA",
+        "ventas_actual", "ventas_mes_anterior", "ventas_anio_anterior",
+        "margen_actual", "margen_mes_anterior", "margen_anio_anterior"
+    ]
+    categorias_bajaron = categorias_bajaron.rename(columns={"margen_anterior": "margen_mes_anterior"})
+    categorias_bajaron = categorias_bajaron[cols]
+    # Formatear
+    categorias_bajaron["ventas_actual"] = categorias_bajaron["ventas_actual"].map(formatear_guaranies)
+    categorias_bajaron["ventas_mes_anterior"] = categorias_bajaron["ventas_mes_anterior"].map(formatear_guaranies)
+    categorias_bajaron["ventas_anio_anterior"] = categorias_bajaron["ventas_anio_anterior"].map(formatear_guaranies)
+    categorias_bajaron["margen_actual"] = categorias_bajaron["margen_actual"].map(formatear_porcentaje)
+    categorias_bajaron["margen_mes_anterior"] = categorias_bajaron["margen_mes_anterior"].map(formatear_porcentaje)
+    categorias_bajaron["margen_anio_anterior"] = categorias_bajaron["margen_anio_anterior"].map(formatear_porcentaje)
+    st.dataframe(categorias_bajaron, use_container_width=True)
+    st.download_button(
+        label="⬇️ Descargar categorías que bajaron",
+        data=generar_excel(categorias_bajaron, "Categorias Bajaron"),
+        file_name="categorias_bajaron_ventas.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

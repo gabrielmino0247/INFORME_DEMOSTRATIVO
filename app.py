@@ -114,6 +114,8 @@ with st.sidebar:
 # Cargar los datos
 @st.cache_data
 def cargar_datos_desde_dropbox():
+    # url = st.secrets["urls"]["dropbox"]
+    #usar documento excel como url
     url = st.secrets["urls"]["dropbox"]
     response = requests.get(url)
     
@@ -743,7 +745,7 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     comparativo_mostrar = comparativo_aa.copy()
     comparativo_mostrar["ventas_actual"] = comparativo_mostrar["ventas_actual"].map(formatear_guaranies)
     comparativo_mostrar["ventas_anio_anterior"] = comparativo_mostrar["ventas_anio_anterior"].map(formatear_guaranies)
-    comparativo_mostrar["variacion_%"] = comparativo_mostrar["variacion_%"].round(2).map(formatear_porcentaje)
+    comparativo_mostrar["variacion_%"] = pd.to_numeric(comparativo_mostrar["variacion_%"], errors="coerce").round(2).map(formatear_porcentaje)
     comparativo_mostrar["diferencia"] = comparativo_mostrar["diferencia"].map(formatear_guaranies)
 
     st.dataframe(comparativo_mostrar.fillna(""), use_container_width=True)
@@ -1119,7 +1121,11 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     tabla_mostrar_aa = tabla_margen_aa_con_totales.copy()
     tabla_mostrar_aa["margen_actual"] = tabla_mostrar_aa["margen_actual"].map(formatear_porcentaje)
     tabla_mostrar_aa["margen_anio_anterior"] = tabla_mostrar_aa["margen_anio_anterior"].map(formatear_porcentaje)
-    tabla_mostrar_aa["variacion_margen"] = tabla_mostrar_aa["variacion_margen"].map(formatear_porcentaje)
+    # Formatear la columna de variación si existe
+    if "variacion_%" in tabla_mostrar_aa.columns:
+        tabla_mostrar_aa["variacion_%"] = pd.to_numeric(tabla_mostrar_aa["variacion_%"], errors="coerce").round(2).map(formatear_porcentaje)
+    elif "variacion_margen" in tabla_mostrar_aa.columns:
+        tabla_mostrar_aa["variacion_margen"] = pd.to_numeric(tabla_mostrar_aa["variacion_margen"], errors="coerce").round(2).map(formatear_porcentaje)
 
     # Mostrar la tabla en Streamlit
     st.dataframe(tabla_mostrar_aa.fillna(""), use_container_width=True)
@@ -1187,7 +1193,7 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     tabla_u_mostrar = tabla_utilidad.copy()
     tabla_u_mostrar["utilidad_actual"] = tabla_u_mostrar["utilidad_actual"].map(formatear_guaranies)
     tabla_u_mostrar["utilidad_anterior"] = tabla_u_mostrar["utilidad_anterior"].map(formatear_guaranies)
-    tabla_u_mostrar["variacion_%"] = tabla_u_mostrar["variacion_%"].round(2).map(formatear_porcentaje)
+    tabla_u_mostrar["variacion_%"] = pd.to_numeric(tabla_u_mostrar["variacion_%"], errors="coerce").round(2).map(formatear_porcentaje)
     tabla_u_mostrar["diferencia"] = tabla_u_mostrar["diferencia"].map(formatear_guaranies)
 
     st.dataframe(tabla_u_mostrar, use_container_width=True)
@@ -1252,7 +1258,7 @@ if seccion == "📆 Comparativos Mensuales y Anuales":
     tabla_mostrar_aa = tabla_utilidad_aa.copy()
     tabla_mostrar_aa["utilidad_actual"] = tabla_mostrar_aa["utilidad_actual"].map(formatear_guaranies)
     tabla_mostrar_aa["utilidad_anio_anterior"] = tabla_mostrar_aa["utilidad_anio_anterior"].map(formatear_guaranies)
-    tabla_mostrar_aa["variacion_%"] = tabla_mostrar_aa["variacion_%"].round(2).map(formatear_porcentaje)
+    tabla_mostrar_aa["variacion_%"] = pd.to_numeric(tabla_mostrar_aa["variacion_%"], errors="coerce").round(2).map(formatear_porcentaje)
     tabla_mostrar_aa["diferencia"] = tabla_mostrar_aa["diferencia"].map(formatear_guaranies)
 
     st.dataframe(tabla_mostrar_aa.fillna(""), use_container_width=True)
